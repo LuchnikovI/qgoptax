@@ -10,12 +10,12 @@ class CheckManifolds():
         self.m = m  # example of a manifold
         self.descr = descr
         self.shape = shape  # shape of a tensor
-        self.u = m.random(shape)  # point from a manifold
-        self.v1 = m.random_tangent(self.u)  # first tangent vector
-        self.v2 = m.random_tangent(self.u)  # second tangent vector
+        self.u = m.random(key, shape)  # point from a manifold
+        self.v1 = m.random_tangent(key, self.u)  # first tangent vector
+        self.v2 = m.random_tangent(key, self.u)  # second tangent vector
         self.zero = self.u * 0.  # zero vector
         self.tol = tol  # tolerance of a test
-        self.key = key  # PRNGKey
+        self.key = random.split(key)[0]  # PRNGKey
 
     def _proj_of_tangent(self):
         """
