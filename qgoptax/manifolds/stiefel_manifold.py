@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import jax
 from jax import random
-from ..utils import adj, transp, diag_part, PRNGKey
+from utils import adj, transp, diag_part, PRNGKey
 from typing import Tuple
 
 
