@@ -10,9 +10,9 @@ class CheckManifolds():
         self.m = m  # example of a manifold
         self.descr = descr
         self.shape = shape  # shape of a tensor
-        self.u = m.random(key, shape)  # point from a manifold
-        self.v1 = m.random_tangent(key, self.u)  # first tangent vector
-        self.v2 = m.random_tangent(key, self.u)  # second tangent vector
+        self.u = m.random(key, shape, dtype=jnp.complex128)  # point from a manifold
+        self.v1 = m.random_tangent(key, self.u, dtype=jnp.complex128)  # first tangent vector
+        self.v2 = m.random_tangent(key, self.u, dtype=jnp.complex128)  # second tangent vector
         self.zero = self.u * 0.  # zero vector
         self.tol = tol  # tolerance of a test
         self.key = random.split(key)[0]  # PRNGKey
@@ -40,7 +40,7 @@ class CheckManifolds():
         Returns:
             jnp scalar, maximum value of error"""
 
-        xi = random.normal(self.key, (*self.shape, 2))
+        xi = random.normal(self.key, (*self.shape, 2), dtype=jnp.float64)
         xi = jax.lax.complex(xi[..., 0], xi[..., 1])
 
         xi_proj = self.m.proj(self.u, xi)
@@ -126,7 +126,7 @@ class CheckManifolds():
         """
 
         # vector that plays the role of a gradient
-        xi = random.normal(self.key, (*self.u.shape, 2))
+        xi = random.normal(self.key, (*self.u.shape, 2), dtype=jnp.float64)
         xi = xi[..., 0] + 1j * xi[..., 1]
 
 
