@@ -1,7 +1,7 @@
 import pytest
-from qgoptax import manifolds
 from tests.test_manifolds import CheckManifolds
 from jax import random
+from qgoptax.manifolds.stiefel_manifold import StiefelManifold
 
 @pytest.fixture(params=['StiefelManifold'])
 def stiefel_name(request):
@@ -25,7 +25,7 @@ def stiefel_retraction(request):
 
 def test_stiefel_manifold(stiefel_name, stiefel_metric, stiefel_retraction, stiefel_shape, stiefel_tol):
     Test = CheckManifolds(
-        manifolds.StiefelManifold(metric=stiefel_metric, retraction=stiefel_retraction),
+        StiefelManifold(metric=stiefel_metric, retraction=stiefel_retraction),
         (stiefel_name, stiefel_metric),
         stiefel_shape,
         stiefel_tol,
