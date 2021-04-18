@@ -25,10 +25,10 @@ def stiefel_retraction(request):
 
 def test_stiefel_manifold(stiefel_name, stiefel_metric, stiefel_retraction, stiefel_shape, stiefel_tol):
     Test = CheckManifolds(
+        random.PRNGKey(42),
         StiefelManifold(metric=stiefel_metric, retraction=stiefel_retraction),
         (stiefel_name, stiefel_metric),
         stiefel_shape,
-        stiefel_tol,
-        random.PRNGKey(42)
+        stiefel_tol
     )
     Test.checks()
