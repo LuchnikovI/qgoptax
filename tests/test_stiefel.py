@@ -2,6 +2,8 @@ import pytest
 from tests.test_manifolds import CheckManifolds
 from jax import random
 from qgoptax.manifolds.stiefel_manifold import StiefelManifold
+from jax.config import config
+config.update("jax_enable_x64", True)
 
 @pytest.fixture(params=['StiefelManifold'])
 def stiefel_name(request):
