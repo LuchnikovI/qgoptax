@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade jax
+        pip install --upgrade jax jaxlib
         pip install flake8 pytest
     - name: Lint with flake8
       run: |
