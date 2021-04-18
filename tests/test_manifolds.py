@@ -11,8 +11,8 @@ class CheckManifolds():
         self.descr = descr
         self.shape = shape  # shape of a tensor
         self.u = m.random(key, shape, dtype=jnp.complex128)  # point from a manifold
-        self.v1 = m.random_tangent(key, self.u, dtype=jnp.complex128)  # first tangent vector
-        self.v2 = m.random_tangent(key, self.u, dtype=jnp.complex128)  # second tangent vector
+        self.v1 = m.random_tangent(key, self.u)  # first tangent vector
+        self.v2 = m.random_tangent(key, self.u)  # second tangent vector
         self.zero = self.u * 0.  # zero vector
         self.tol = tol  # tolerance of a test
         self.key = random.split(key)[0]  # PRNGKey
