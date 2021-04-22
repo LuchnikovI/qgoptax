@@ -62,7 +62,7 @@ class RAdam(Optimizer):
             param, rgrad, rgrad
         )
         if self.ams:
-            v_hat = jnp.maximum(jnp.real(v), jnp.real(state[2]))
+            v_hat = jax.lax.complex(jnp.maximum(jnp.real(v), jnp.real(state[2])), jnp.imag(v))
 
         # Bias correction
         lr_corr = (
