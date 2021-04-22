@@ -10,11 +10,13 @@ class NaturalRGD:
     def __init__(self, manifold: Manifold,
                  dist: Callable[[Params, Params], jnp.ndarray],
                  learning_rate: jnp.ndarray,
-                 name='NaturalRGD'):
+                 name='NaturalRGD',
+                 penalty=1e8):
         self.manifold = manifold
         self.name = name
         metric = lambda u, v: jvp(grad(lambda x: dist(u, x)), (u,), (v,))[1]
-        self.A = lambda u, v: tree_multimap(manifold.proj, u, metric(u, tree_multimap(manifold.proj, u, v))) + 1e8 * tree_multimap(lambda x, y: y - manifold.proj(x, y), u, v)
+        orthogonal_penalty = lambda u, v: tree_multimap(lambda x, y: penalty*(y - manifold.proj(x, y)), u, v)
+        self.A = lambda u, v: tree_multimap(manifold.proj, u, metric(u, tree_multimap(manifold.proj, u, v))) + orthogonal_penalty(u, v)
         self.learning_rate = learning_rate
         
 
@@ -54,4 +56,3 @@ class NaturalRGD:
         rgrad = tree_proj(rgrad)
         params = tree_multimap(lambda x, y: x - self.learning_rate * y, params, rgrad)
         return params
-
