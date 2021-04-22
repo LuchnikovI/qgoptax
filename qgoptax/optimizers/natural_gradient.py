@@ -1,6 +1,6 @@
 from qgoptax.optimizers.utils import Manifold, Params
 from typing import Callable
-from jax.tree_util import tree_multimap, tree_map
+from jax.tree_util import tree_multimap
 import jax.numpy as jnp
 from jax import jvp, grad
 from jax.scipy.sparse.linalg import cg
@@ -13,7 +13,7 @@ class NaturalRGD:
                  name='NaturalRGD'):
         self.manifold = manifold
         self.name = name
-        metric = lambda u, v: jvp(grad(lambda x: dist(u, x)), u, v)[1]
+        metric = lambda u, v: jvp(grad(lambda x: dist(u, x)), (u,), (v,))[1]
         self.a = lambda u, v: manifold.proj(u, metric(u, manifold.proj(u, v)))
         self.learning_rate = learning_rate
         
