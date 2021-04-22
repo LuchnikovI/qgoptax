@@ -4,6 +4,7 @@ from jax import vmap
 
 PRNGKey = jnp.array
 
+
 def adj(a: jnp.ndarray) -> jnp.ndarray:
     """Returns adjoint matrix.
 
@@ -21,6 +22,7 @@ def adj(a: jnp.ndarray) -> jnp.ndarray:
     a = a.conj()
     return a
 
+
 def transp(a: jnp.ndarray) -> jnp.ndarray:
     """Returns transposed matrix.
 
@@ -36,6 +38,7 @@ def transp(a: jnp.ndarray) -> jnp.ndarray:
     a = a.transpose((0, 2, 1))
     a = a.reshape((*bs_shape, matrix_shape[1], matrix_shape[0]))
     return a
+
 
 def diag_part(a: jnp.ndarray) -> jnp.ndarray:
     """Returns the diagonal part of a matrix.
