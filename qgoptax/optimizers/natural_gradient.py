@@ -47,8 +47,8 @@ class NaturalRGD:
         Returns:
             new parameters"""
 
-        A = lambda x: self.A(params, x)
-        rgrad = cg(A, grads, x0=x0, tol=tol, atol=atol, maxiter=maxiter, M=M)
+        A = lambda x: tree_multimap(lambda a, b: a + eps * b, self.A(params, x), x)
+        rgrad = cg(A, grads, x0=x0, tol=tol, atol=atol, maxiter=maxiter, M=M)[0]
         tree_proj = lambda x: tree_multimap(self.manifold.proj, params, x)
         rgrad = tree_proj(rgrad)
         params = tree_multimap(lambda x, y: x - self.learning_rate * y, params, rgrad)
