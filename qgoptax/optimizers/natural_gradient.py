@@ -14,7 +14,7 @@ class NaturalRGD:
         self.manifold = manifold
         self.name = name
         metric = lambda u, v: jvp(grad(lambda x: dist(u, x)), u, v)[1]
-        self.A = lambda u, v: manifold.proj(u, metric(u, manifold.proj(u, v)))
+        self.a = lambda u, v: manifold.proj(u, metric(u, manifold.proj(u, v)))
         self.learning_rate = learning_rate
         
 
@@ -47,9 +47,11 @@ class NaturalRGD:
         Returns:
             new parameters"""
 
-        A = lambda x: tree_map(lambda y: self.A(params, y) + eps * y, x)
+        a = lambda x, y: self.a(x, y) + eps * y
+        A = lambda x: tree_multimap(a, params, x)
         rgrad = cg(A, grads, x0=x0, tol=tol, atol=atol, maxiter=maxiter, M=M)
-        rgrad = tree_map(lambda x: self.manifold.proj(params, x), rgrad)
+        tree_proj = lambda x: tree_multimap(self.manifold.proj, params, x)
+        rgrad = tree_proj(rgrad)
         params = tree_multimap(lambda x, y: x - self.learning_rate * y, params, rgrad)
         return params
 
