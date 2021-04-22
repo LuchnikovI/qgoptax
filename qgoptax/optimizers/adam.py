@@ -2,6 +2,7 @@ from qgoptax.optimizers.base_optimizer import Optimizer
 from qgoptax.optimizers.utils import Manifold
 from typing import Tuple
 import jax.numpy as jnp
+import jax
 
 
 class RAdam(Optimizer):
