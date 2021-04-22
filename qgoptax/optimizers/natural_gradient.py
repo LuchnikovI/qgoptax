@@ -53,6 +53,6 @@ class NaturalRGD:
         tree_proj = lambda x: tree_multimap(self.manifold.proj, params, x)
         proj_grads = tree_proj(grads)
         rgrad = cg(A, proj_grads, x0=x0, tol=tol, atol=atol, maxiter=maxiter, M=M)[0]
-        rgrad = tree_proj(rgrad)
+        #rgrad = tree_proj(rgrad)
         params = tree_multimap(lambda x, y: self.manifold.retraction(x, -self.learning_rate*y), params, rgrad)
         return params
