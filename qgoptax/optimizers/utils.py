@@ -1,4 +1,4 @@
-from functools import Any
+from typing import Any
 from jax.tree_util import tree_flatten, tree_unflatten
 import jax.numpy as jnp
 

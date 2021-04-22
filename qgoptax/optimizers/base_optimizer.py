@@ -1,4 +1,4 @@
-from utils import Manifold, Params, transpose_pytree
+from qgoptax.optimizers.utils import Manifold, Params, transpose_pytree
 from typing import Tuple
 from jax.tree_util import tree_map, tree_multimap
 import jax.numpy as jnp
