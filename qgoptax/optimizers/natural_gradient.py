@@ -11,7 +11,7 @@ class NaturalRGD:
                  dist: Callable[[Params, Params], jnp.ndarray],
                  learning_rate: jnp.ndarray,
                  name='NaturalRGD',
-                 penalty=1e8):
+                 penalty=1e6):
         self.manifold = manifold
         self.name = name
         metric = lambda u, v: jvp(grad(lambda x: dist(u, x)), (u,), (v,))[1]
