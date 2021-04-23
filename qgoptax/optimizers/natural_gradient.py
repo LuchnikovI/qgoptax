@@ -1,6 +1,6 @@
 from qgoptax.optimizers.utils import Manifold, Params
 from typing import Callable
-from jax.tree_util import tree_multimap, tree_map
+from jax.tree_util import tree_multimap
 import jax.numpy as jnp
 from jax import jvp, grad
 from jax.scipy.sparse.linalg import cg
@@ -53,6 +53,6 @@ class NaturalRGD:
         preprocessing = lambda x: tree_multimap(lambda u, v: self.manifold.proj(u, v.conj()), params, x)
         proj_grads = preprocessing(grads)
         rgrad = cg(A, proj_grads, x0=x0, tol=tol, atol=atol, maxiter=maxiter, M=M)[0]
-        rgrad = tree_map(lambda x: self.manifold.proj(params, x), rgrad)
+        rgrad = tree_multimap(lambda x, y: self.manifold.proj(x, y), params, rgrad)
         params = tree_multimap(lambda x, y: self.manifold.retraction(x, -self.learning_rate*y), params, rgrad)
         return params
