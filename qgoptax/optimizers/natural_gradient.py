@@ -16,7 +16,7 @@ class NaturalRGD:
         self.manifold = manifold
         self.name = name
         self.metric_action = lambda u, v: jvp(grad(lambda x: dist(u, x)), (u,), (v,))
-        self.total_penalty = lambda x, y: tree_multimap(lambda u, v: orth_penalty * (v - manifold.proj(u, v)) + penalty * v, x, y)
+        self.total_penalty = lambda u, v: tree_multimap(lambda x, y: orth_penalty * (y - manifold.proj(x, y)) + penalty * y, u, v)
         self.tree_proj = lambda u, v: tree_multimap(manifold.proj, u, v)
         self.A = lambda u, v: self.tree_proj(u, self.metric_action(u, self.tree_proj(u, v)))
         self.penalized_A = lambda u, v: tree_multimap(lambda x, y: x+y, self.A(u, v), self.total_penalty(u, v))
