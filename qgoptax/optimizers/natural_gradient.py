@@ -52,7 +52,7 @@ class NaturalRGD:
             new parameters"""
 
         A = lambda v: self.penalized_A(params, v)
-        proj_grads = lambda x: tree_multimap(lambda u, v: self.manifold.proj(u, v.conj()), params, x)(grads)
+        proj_grads = tree_multimap(lambda u, v: self.manifold.proj(u, v.conj()), params, grads)
         rgrad = cg(A, proj_grads, x0=x0, tol=tol, atol=atol, maxiter=maxiter, M=M)[0]
         params = tree_multimap(lambda x, y: self.manifold.retraction(x, -self.learning_rate*y), params, rgrad)
         return params
