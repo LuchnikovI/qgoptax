@@ -1,6 +1,6 @@
 from qgoptax.optimizers.base_optimizer import Optimizer
 from qgoptax.optimizers.utils import Manifold
-from typing import Tuple
+from typing import Tuple, Union
 import jax.numpy as jnp
 
 
@@ -16,10 +16,14 @@ class RSGD(Optimizer):
             (Standard GD)."""
 
     def __init__(
-        self, manifold: Manifold, learning_rate=0.01, momentum=0.0, name="RSGD"
+        self, manifold: Manifold,
+        learning_rate=0.01,
+        momentum=0.0,
+        name="RSGD",
+        use_precond=False
     ):
 
-        super().__init__(manifold, name)
+        super().__init__(manifold, name, use_precond)
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.use_momentum = False
@@ -41,8 +45,13 @@ class RSGD(Optimizer):
         grad: jnp.ndarray,
         state: Tuple[jnp.ndarray],
         param: jnp.ndarray,
+        precond: Union[None, jnp.ndarray],
+        use_precond=False
     ) -> Tuple[jnp.ndarray, Tuple[jnp.ndarray]]:
-        rgrad = self.manifold.egrad_to_rgrad(param, grad.conj())
+        if use_precond:
+            rgrad = self.manifold.egrad_to_rgrad(param, grad.conj(), precond)
+        else:
+            rgrad = self.manifold.egrad_to_rgrad(param, grad.conj())
         if self.use_momentum:
             momentum = self.momentum * state[0] + (1 - self.momentum) * rgrad
             param, momentum = self.manifold.retraction_transport(

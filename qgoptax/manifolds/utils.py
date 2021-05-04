@@ -64,11 +64,11 @@ def ab_decomposition(u: jnp.ndarray,
     then a matrix is  skew-hermitian.
 
     Args:
-        u: array like of shape (..., n, m)
-        v: array like of shape (..., n, m)
+        u: array like of shape (..., n, m).
+        v: array like of shape (..., n, m).
 
     Returns:
-        elements of decomposition a, b, and u_orth"""
+        elements of decomposition a, b, and u_orth."""
 
     n, m = u.shape[-2:]
     tail = u.shape[:-2]
@@ -85,19 +85,24 @@ def ab_decomposition(u: jnp.ndarray,
 
 def sylvester_solve(a: jnp.ndarray,
                     rho: jnp.ndarray,
-                    eps: float=1e-6) -> jnp.ndarray:
+                    eps: float=1e-6) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """Solves Sylvester equation x @ rho + rho @ x = 2 * a.
 
     Args:
-        a: array like of shape (..., m, m)
-        rho: array like of shape (..., m, m)
-        eps: float value regularizing inversion of eigenvalues
+        a: array like of shape (..., m, m).
+        rho: array like of shape (..., m, m).
+        eps: float value regularizing inversion of eigenvalues.
 
     Returns:
-        array like of shape (..., m, m), solution of the equation"""
+        array like of shape (..., m, m), solution of the equation
+        and array like of shape (..., m, m), inverse preconditioner."""
 
     lmbd, u = jnp.linalg.eigh(rho)
-    lmbd = lmbd[..., jnp.newaxis, :] + lmbd[..., jnp.newaxis]
-    lmbd = lmbd / 2
     lmbd_inv = lmbd / (lmbd ** 2 + eps ** 2)
-    return u @ (lmbd_inv * (adj(u) @ a @ u)) @ adj(u)
+    rho_inv = (adj(u) * lmbd_inv) @ u
+    
+    dlmbd = lmbd[..., jnp.newaxis, :] + lmbd[..., jnp.newaxis]
+    dlmbd = dlmbd / 2
+    dlmbd_inv = dlmbd / (dlmbd ** 2 + eps ** 2)
+    
+    return u @ (dlmbd_inv * (adj(u) @ a @ u)) @ adj(u), rho_inv

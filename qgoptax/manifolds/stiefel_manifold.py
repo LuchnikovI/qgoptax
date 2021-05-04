@@ -1,12 +1,15 @@
-from typing import Tuple
+from typing import Tuple, Union
 import jax.numpy as jnp
 import jax
 from jax import random
-from qgoptax.manifolds.utils import adj, transp, diag_part, PRNGKey
+from qgoptax.manifolds.utils import adj, transp, diag_part, sylvester_solve, ab_decomposition, PRNGKey
 
 
 class StiefelManifold:
-    def __init__(self, retraction="svd", metric="euclidean"):
+    def __init__(self,
+                 retraction: str="svd",
+                 metric: str="euclidean",
+                 use_precond: bool=False):
 
         list_of_metrics = ["euclidean", "canonical"]
         list_of_retractions = ["svd", "cayley", "qr"]
@@ -18,6 +21,7 @@ class StiefelManifold:
 
         self._retraction = retraction
         self._metric = metric
+        self._use_precond = use_precond
 
     def __repr__(self):
 
@@ -32,7 +36,11 @@ class StiefelManifold:
         )
 
     def inner(
-        self, u: jnp.ndarray, vec1: jnp.ndarray, vec2: jnp.ndarray
+        self,
+        u: jnp.ndarray,
+        vec1: jnp.ndarray,
+        vec2: jnp.ndarray,
+        precond: Union[None, jnp.ndarray]=None
     ) -> jnp.ndarray:
         """Returns manifold wise inner product of vectors from
         a tangent space.
@@ -47,6 +55,9 @@ class StiefelManifold:
             vec2: complex valued tensor of shape (..., n, p),
                 a set of tangent vectors from the complex
                 Stiefel manifold.
+            precond: complex valued tensor of shape (..., p, p),
+                optional preconditioner representing natural metric
+                of an isometric tensor network.
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
@@ -56,17 +67,23 @@ class StiefelManifold:
             The complexity for the 'euclidean' metric is O(pn),
             the complexity for the 'canonical' metric is O(np^2)"""
 
-        if self._metric == "euclidean":
-            s_sq = (vec1.conj() * vec2).sum(keepdims=True, axis=(-2, -1))
-        elif self._metric == "canonical":
-            s_sq_1 = (vec1.conj() * vec2).sum(keepdims=True, axis=(-2, -1))
-            vec1_dag_u = adj(vec1) @ u
-            u_dag_vec2 = adj(u) @ vec2
-            s_sq_2 = (u_dag_vec2 * transp(vec1_dag_u)).sum(axis=(-2, -1), keepdims=True)
-            s_sq = s_sq_1 - 0.5 * s_sq_2
+        if not self._use_precond:
+            if self._metric == "euclidean":
+                s_sq = (vec1.conj() * vec2).sum(keepdims=True, axis=(-2, -1))
+            elif self._metric == "canonical":
+                s_sq_1 = (vec1.conj() * vec2).sum(keepdims=True, axis=(-2, -1))
+                vec1_dag_u = adj(vec1) @ u
+                u_dag_vec2 = adj(u) @ vec2
+                s_sq_2 = (u_dag_vec2 * transp(vec1_dag_u)).sum(axis=(-2, -1), keepdims=True)
+                s_sq = s_sq_1 - 0.5 * s_sq_2
+        else:
+            s_sq = (vec1.conj() * (vec2 @ precond)).sum(keepdims=True, axis=(-2, -1))
         return jnp.real(s_sq).astype(dtype=u.dtype)
 
-    def egrad_to_rgrad(self, u: jnp.ndarray, egrad: jnp.ndarray) -> jnp.ndarray:
+    def egrad_to_rgrad(self,
+                       u: jnp.ndarray,
+                       egrad: jnp.ndarray,
+                       precond: Union[None, jnp.ndarray]=None) -> jnp.ndarray:
         """Returns the Riemannian gradient from an Euclidean gradient.
 
         Args:
@@ -75,6 +92,9 @@ class StiefelManifold:
                 manifold.
             egrad: complex valued tensor of shape (..., n, p),
                 a set of Euclidean gradients.
+            precond: complex valued tensor of shape (..., p, p),
+                optional preconditioner representing natural metric
+                of an isometric tensor network.
 
         Returns:
             complex valued tensor of shape (..., n, p),
@@ -83,15 +103,22 @@ class StiefelManifold:
         Note:
             The complexity is O(np^2)"""
 
-        if self._metric == "euclidean":
-            return (
-                0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u)
-                + egrad
-                - u @ (adj(u) @ egrad)
-            )
-
-        elif self._metric == "canonical":
-            return egrad - u @ (adj(egrad) @ u)
+        if not self._use_precond:
+            if self._metric == "euclidean":
+                return (
+                    0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u)
+                    + egrad
+                    - u @ (adj(u) @ egrad)
+                )
+    
+            elif self._metric == "canonical":
+                return egrad - u @ (adj(egrad) @ u)
+        else:
+            a, b, u_orth = ab_decomposition(u, egrad)
+            a = 0.5 * (a - adj(a))
+            a_tild, rho_inv = sylvester_solve(a, precond)
+            b_tild = b @ rho_inv
+            return u @ a_tild + u_orth @ b_tild
 
     def proj(self, u: jnp.ndarray, vec: jnp.ndarray) -> jnp.ndarray:
         """Returns projection of vectors on the tangen space

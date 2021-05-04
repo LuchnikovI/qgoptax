@@ -1,6 +1,6 @@
 from qgoptax.optimizers.base_optimizer import Optimizer
 from qgoptax.optimizers.utils import Manifold
-from typing import Tuple
+from typing import Tuple, Union
 import jax.numpy as jnp
 import jax
 
@@ -29,8 +29,9 @@ class RAdam(Optimizer):
         eps=1e-8,
         ams=False,
         name="RAdam",
+        use_precond=False
     ):
-        super().__init__(manifold, name)
+        super().__init__(manifold, name, use_precond)
         if isinstance(beta1, (int, float)) and (beta1 < 0 or beta1 > 1):
             raise ValueError("`beta1` must be between [0, 1].")
         if isinstance(beta2, (int, float)) and (beta2 < 0 or beta2 > 1):
@@ -56,12 +57,22 @@ class RAdam(Optimizer):
         grad: jnp.ndarray,
         state: Tuple[jnp.ndarray],
         param: jnp.ndarray,
+        precond: Union[None, jnp.ndarray],
+        use_precond=False
     ) -> Tuple[jnp.ndarray, Tuple[jnp.ndarray]]:
-        rgrad = self.manifold.egrad_to_rgrad(param, grad.conj())
+        if use_precond:
+            rgrad = self.manifold.egrad_to_rgrad(param, grad.conj(), precond)
+        else:
+            rgrad = self.manifold.egrad_to_rgrad(param, grad.conj())
         momentum = self.beta1 * state[0] + (1 - self.beta1) * rgrad
-        v = self.beta2 * state[1] + (1 - self.beta2) * self.manifold.inner(
-            param, rgrad, rgrad
-        )
+        if use_precond:
+            v = self.beta2 * state[1] + (1 - self.beta2) * self.manifold.inner(
+                param, rgrad, rgrad, precond
+            )
+        else:
+            v = self.beta2 * state[1] + (1 - self.beta2) * self.manifold.inner(
+                param, rgrad, rgrad
+            )
         if self.ams:
             v_hat = jax.lax.complex(jnp.maximum(jnp.real(v), jnp.real(state[2])), jnp.imag(v))
 
