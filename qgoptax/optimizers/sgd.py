@@ -45,7 +45,7 @@ class RSGD(Optimizer):
         grad: jnp.ndarray,
         state: Tuple[jnp.ndarray],
         param: jnp.ndarray,
-        precond: Union[None, jnp.ndarray],
+        precond: Union[None, jnp.ndarray]=None,
         use_precond=False
     ) -> Tuple[jnp.ndarray, Tuple[jnp.ndarray]]:
         if use_precond:
