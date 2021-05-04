@@ -85,7 +85,7 @@ def ab_decomposition(u: jnp.ndarray,
 
 def sylvester_solve(a: jnp.ndarray,
                     rho: jnp.ndarray,
-                    eps=1e-6: float) -> jnp.ndarray:
+                    eps: float=1e-6) -> jnp.ndarray:
     """Solves Sylvester equation x @ rho + rho @ x = 2 * a.
 
     Args:
