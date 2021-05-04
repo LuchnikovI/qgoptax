@@ -61,7 +61,7 @@ class Optimizer:
         else:
             params, state = transpose_pytree(
                 tree_multimap(
-                    lambda x, z, *y: self._apply(iter, x, y, z), grads, params, *state[1:]
+                    lambda x, z, *y: self._apply(iter, x, y, z, None, use_precond=False), grads, params, *state[1:]
                 )
             )
         state = transpose_pytree(state)
@@ -73,7 +73,7 @@ class Optimizer:
         grad: jnp.ndarray,
         state: Tuple[jnp.ndarray],
         param: jnp.ndarray,
-        precond: Union[None, jnp.ndarray]
+        precond: Union[None, jnp.ndarray]=None
     ) -> Tuple[jnp.ndarray, Tuple[jnp.ndarray]]:
         """Applies update to tensor.
 
