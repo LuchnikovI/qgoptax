@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from typing import Tuple
 from jax import vmap
 
 
@@ -54,3 +55,49 @@ def diag_part(a: jnp.ndarray) -> jnp.ndarray:
     a = vmap(jnp.diag)(a.reshape((-1, *matrix_shape)))
     a = a.reshape((*bs_shape, -1))
     return a
+
+
+def ab_decomposition(u: jnp.ndarray,
+                     v: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    """Decompose vector v as follows
+    v = u @ a + u_orth @ b. If vector v is a tangent,
+    then a matrix is  skew-hermitian.
+
+    Args:
+        u: array like of shape (..., n, m)
+        v: array like of shape (..., n, m)
+
+    Returns:
+        elements of decomposition a, b, and u_orth"""
+
+    n, m = u.shape[-2:]
+    tail = u.shape[:-2]
+    u = u.reshape((-1, n, m))
+    v = v.reshape((-1, n, m))
+    u_orth = vmap(lambda x: jnp.linalg.qr(x, mode='complete')[0])(u)[..., m:]
+    a = u.conj().transpose((0, 2, 1)) @ v
+    b = u_orth.conj().transpose((0, 2, 1)) @ v
+    a = a.reshape((*tail, -1, m))
+    b = b.reshape((*tail, -1, m))
+    u_orth = u_orth.reshape((*tail, n, -1))
+    return a, b, u_orth
+
+
+def sylvester_solve(a: jnp.ndarray,
+                    rho: jnp.ndarray,
+                    eps=1e-6: float) -> jnp.ndarray:
+    """Solves Sylvester equation x @ rho + rho @ x = 2 * a.
+
+    Args:
+        a: array like of shape (..., m, m)
+        rho: array like of shape (..., m, m)
+        eps: float value regularizing inversion of eigenvalues
+
+    Returns:
+        array like of shape (..., m, m), solution of the equation"""
+
+    lmbd, u = jnp.linalg.eigh(rho)
+    lmbd = lmbd[..., jnp.newaxis, :] + lmbd[..., jnp.newaxis]
+    lmbd = lmbd / 2
+    lmbd_inv = lmbd / (lmbd ** 2 + eps ** 2)
+    return u @ (lmbd_inv * (adj(u) @ a @ u)) @ adj(u)
