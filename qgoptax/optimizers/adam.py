@@ -30,7 +30,7 @@ class RAdam(Optimizer):
         ams=False,
         name="RAdam"
     ):
-        super().__init__(manifold, name, m.use_precond)
+        super().__init__(manifold, name)
         if isinstance(beta1, (int, float)) and (beta1 < 0 or beta1 > 1):
             raise ValueError("`beta1` must be between [0, 1].")
         if isinstance(beta2, (int, float)) and (beta2 < 0 or beta2 > 1):
