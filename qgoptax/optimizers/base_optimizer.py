@@ -11,7 +11,7 @@ class Optimizer:
                  use_precond: bool=False):
         self.manifold = manifold
         self.name = name
-        self.use_precond = use_precond
+        self.use_precond = manifold._use_precond
 
     def __repr__(self):
         return self.name
