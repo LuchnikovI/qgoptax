@@ -19,11 +19,10 @@ class RSGD(Optimizer):
         self, manifold: Manifold,
         learning_rate=0.01,
         momentum=0.0,
-        name="RSGD",
-        use_precond=False
+        name="RSGD"
     ):
 
-        super().__init__(manifold, name, use_precond)
+        super().__init__(manifold, name)
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.use_momentum = False
