@@ -85,7 +85,7 @@ def ab_decomposition(u: jnp.ndarray,
 
 def sylvester_solve(a: jnp.ndarray,
                     rho: jnp.ndarray,
-                    eps: float=1e-6) -> Tuple[jnp.ndarray, jnp.ndarray]:
+                    eps: float=1e-5) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """Solves Sylvester equation x @ rho + rho @ x = 2 * a.
 
     Args:
@@ -97,12 +97,13 @@ def sylvester_solve(a: jnp.ndarray,
         array like of shape (..., m, m), solution of the equation
         and array like of shape (..., m, m), inverse preconditioner."""
 
-    lmbd, u = jnp.linalg.eigh(rho)
-    lmbd_inv = lmbd / (lmbd ** 2 + eps ** 2)
-    rho_inv = (adj(u) * lmbd_inv) @ u
+    u, lmbd, uh = jnp.linalg.svd(rho)
+    safe_inv = lambda x: 1 / (x * (x > eps) + (x < eps) * (1 / eps))
+    lmbd_inv = safe_inv(lmbd)[..., jnp.newaxis, :]
+    rho_inv = (u * lmbd_inv) @ uh
     
     dlmbd = lmbd[..., jnp.newaxis, :] + lmbd[..., jnp.newaxis]
     dlmbd = dlmbd / 2
-    dlmbd_inv = dlmbd / (dlmbd ** 2 + eps ** 2)
+    dlmbd_inv = safe_inv(dlmbd)
     
     return u @ (dlmbd_inv * (adj(u) @ a @ u)) @ adj(u), rho_inv
