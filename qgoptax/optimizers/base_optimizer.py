@@ -1,6 +1,6 @@
 from qgoptax.optimizers.utils import Manifold, Params, transpose_pytree
 from typing import Tuple, Union
-from jax.tree_util import tree_map, tree_multimap
+from jax.tree_util import tree_map
 import jax.numpy as jnp
 
 
@@ -54,13 +54,13 @@ class Optimizer:
         iter = state[0]
         if self.use_precond:
             params, state = transpose_pytree(
-                tree_multimap(
+                tree_map(
                     lambda x, z, p, *y: self._apply(iter, x, y, z, p, use_precond=True), grads, params, precond, *state[1:]
                 )
             )
         else:
             params, state = transpose_pytree(
-                tree_multimap(
+                tree_map(
                     lambda x, z, *y: self._apply(iter, x, y, z, None, use_precond=False), grads, params, *state[1:]
                 )
             )
